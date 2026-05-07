@@ -4,14 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - Warung Jajanan Seblak</title>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
-    <!-- Midtrans Snap -->
     <script 
         src="https://app.sandbox.midtrans.com/snap/snap.js"
         data-client-key="Mid-client-67s2LUw5jQq9o8Us">
     </script>
-
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #0f172a 0%, #020617 50%, #1e1b4b 100%);
@@ -22,14 +19,14 @@
             --text-main: #f8fafc;
             --text-dim: #94a3b8;
         }
-
+ 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
-
+ 
         body {
             background: var(--primary-gradient);
             background-attachment: fixed;
@@ -38,7 +35,7 @@
             padding: 40px 20px;
             overflow-x: hidden;
         }
-
+ 
         body::before {
             content: "";
             position: fixed;
@@ -51,7 +48,7 @@
             z-index: -1;
             opacity: 0.15;
         }
-
+ 
         body::after {
             content: "";
             position: fixed;
@@ -64,12 +61,12 @@
             z-index: -1;
             opacity: 0.1;
         }
-
+ 
         .checkout-container {
             max-width: 650px;
             margin: 0 auto;
         }
-
+ 
         #kembali {
             display: inline-flex;
             align-items: center;
@@ -84,13 +81,13 @@
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
         }
-
+ 
         #kembali:hover {
             color: white;
             background: rgba(255, 255, 255, 0.1);
             border-color: var(--accent-color);
         }
-
+ 
         h1 {
             font-weight: 800;
             font-size: 2.5rem;
@@ -102,7 +99,7 @@
             -webkit-text-fill-color: transparent;
             text-shadow: 0 10px 30px rgba(244, 63, 94, 0.2);
         }
-
+ 
         .glass-card {
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
@@ -113,7 +110,7 @@
             margin-bottom: 25px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-
+ 
         .section-label {
             display: block;
             font-size: 0.75rem;
@@ -123,7 +120,7 @@
             letter-spacing: 1.5px;
             margin-bottom: 15px;
         }
-
+ 
         input[type="text"] {
             width: 100%;
             padding: 16px 20px;
@@ -135,13 +132,13 @@
             outline: none;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
+ 
         input[type="text"]:focus {
             border-color: var(--accent-color);
             background: rgba(0, 0, 0, 0.4);
             box-shadow: 0 0 20px rgba(244, 63, 94, 0.2);
         }
-
+ 
         .pesanan-item {
             display: flex;
             justify-content: space-between;
@@ -149,30 +146,30 @@
             padding: 18px 0;
             border-bottom: 1px solid var(--glass-border);
         }
-
+ 
         .pesanan-item:last-child {
             border-bottom: none;
         }
-
+ 
         .item-name {
             font-weight: 600;
             font-size: 1.05rem;
             margin-bottom: 4px;
             color: #f1f5f9;
         }
-
+ 
         .item-meta {
             font-size: 0.85rem;
             color: var(--text-dim);
         }
-
+ 
         .item-price {
             font-weight: 700;
             font-size: 1.1rem;
             color: var(--accent-color);
             margin-left: 15px;
         }
-
+ 
         .summary-container {
             margin-top: 10px;
             padding-top: 20px;
@@ -181,14 +178,14 @@
             justify-content: space-between;
             align-items: center;
         }
-
+ 
         #total {
             font-size: 1.75rem;
             font-weight: 800;
             color: var(--accent-color);
             text-shadow: 0 0 15px rgba(244, 63, 94, 0.3);
         }
-
+ 
         #bayar-btn {
             width: 100%;
             margin-top: 10px;
@@ -203,19 +200,19 @@
             box-shadow: 0 10px 25px rgba(225, 29, 72, 0.4);
             transition: all 0.3s ease;
         }
-
+ 
         #bayar-btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 15px 35px rgba(225, 29, 72, 0.6);
             filter: brightness(1.1);
         }
-
+ 
         #bayar-btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
-
+ 
         .error {
             color: #f87171;
             font-size: 0.85rem;
@@ -224,12 +221,12 @@
             display: flex;
             align-items: center;
         }
-
+ 
         .error::before {
             content: "⚠️";
             margin-right: 6px;
         }
-
+ 
         @media (max-width: 600px) {
             h1 { font-size: 1.8rem; }
             .glass-card { padding: 20px; }
@@ -238,12 +235,12 @@
     </style>
 </head>
 <body>
-
+ 
 <div class="checkout-container">
     <a href="index.html" id="kembali">&larr; Kembali ke Menu</a>
     
     <h1>Selesaikan Pesanan</h1>
-
+ 
     <!-- Form Nama -->
     <div class="glass-card">
         <span class="section-label">Informasi Pemesan</span>
@@ -252,7 +249,7 @@
             <div id="nama-error" class="error" style="display:none;">Nama harus diisi agar pesanan dikenali</div>
         </div>
     </div>
-
+ 
     <!-- Daftar Pesanan -->
     <div class="glass-card">
         <span class="section-label">Detail Pesanan</span>
@@ -263,65 +260,50 @@
             <div id="total">Rp0</div>
         </div>
     </div>
-
+ 
     <button id="bayar-btn">Bayar Sekarang &rarr;</button>
 </div>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyCmaCTNGhxjX07I94TA7XXOoLNnbmOF4Ts",
-        authDomain: "form-checkout-592c3.firebaseapp.com",
-        databaseURL: "https://form-checkout-592c3-default-rtdb.firebaseio.com",
-        projectId: "form-checkout-592c3",
-        storageBucket: "form-checkout-592c3.firebasestorage.app",
-        messagingSenderId: "190795533293",
-        appId: "1:190795533293:web:49e162fcbd864902f075e4"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
+ 
+<script>
     const pesanan = JSON.parse(localStorage.getItem('pesanan')) || [];
     const daftarPesanan = document.getElementById('daftar-pesanan');
     const totalElem = document.getElementById('total');
     const bayarBtn = document.getElementById('bayar-btn');
     const namaInput = document.getElementById('nama');
     const namaError = document.getElementById('nama-error');
-
+ 
     let total = 0;
-
-    // Render List Pesanan
+ 
+    // Render daftar pesanan
     if (pesanan.length === 0) {
         daftarPesanan.innerHTML = `<p style="text-align:center; color:var(--text-dim); padding:20px;">Belum ada pesanan terpilih.</p>`;
     } else {
         pesanan.forEach(item => {
             const itemElem = document.createElement('div');
             itemElem.className = 'pesanan-item';
-
-            let teksLevel = (item.level !== undefined && item.level > 0) ? ` (Level Pedas: ${item.level})` : "";
-            let teksNote = (item.note && item.note.trim() !== "") ? `<div class="item-meta">Catatan: ${item.note}</div>` : "";
-
+ 
+            let teksNote = (item.note && item.note.trim() !== "") 
+                ? `<div class="item-meta">Catatan: ${item.note}</div>` 
+                : "";
+ 
             itemElem.innerHTML = `
                 <div class="item-main">
-                    <div class="item-name">${item.nama}${teksLevel} <span style="color:var(--accent-color)">x${item.jumlah}</span></div>
+                    <div class="item-name">${item.nama} <span style="color:var(--accent-color)">x${item.jumlah}</span></div>
                     ${teksNote}
                 </div>
                 <div class="item-price">
                     Rp${(item.harga * item.jumlah).toLocaleString('id-ID')}
                 </div>
             `;
-
+ 
             daftarPesanan.appendChild(itemElem);
             total += item.harga * item.jumlah;
         });
     }
-
+ 
     totalElem.textContent = `Rp${total.toLocaleString('id-ID')}`;
-
-    // Handler Bayar
+ 
+    // Handler tombol bayar
     bayarBtn.addEventListener('click', () => {
         const nama = namaInput.value.trim();
         if (nama === "") {
@@ -330,23 +312,21 @@
             return;
         }
         namaError.style.display = 'none';
-
+ 
         const itemDetails = pesanan.map((item, index) => {
             let namaProduk = item.nama;
-            if (item.level !== undefined && item.level > 0) namaProduk += ` (Lvl ${item.level})`;
-            if (item.note && item.note.trim() !== "") namaProduk += ` - Note: ${item.note}`;
+            if (item.note && item.note.trim() !== "") namaProduk += ` - ${item.note}`;
             return {
-                id: item.nama.replace(/\s/g, "_") + "-" + index,
+                id: `ITEM_${index}`,
                 price: item.harga,
                 quantity: item.jumlah,
-                name: namaProduk.substring(0, 50)
+                name: namaProduk.replace(/[^a-zA-Z0-9 ]/g, '').trim().substring(0, 50)
             };
         });
-
+ 
         bayarBtn.disabled = true;
         bayarBtn.textContent = "Memproses...";
-
-        // ✅ PERUBAHAN UTAMA: ganti localhost:3000 → /api/create-transaction
+ 
         fetch("/api/create-transaction", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -361,34 +341,22 @@
         .then(data => {
             if (data.token) {
                 snap.pay(data.token, {
-                    onSuccess: async function(result) {
-                        const now = new Date();
-                        const waktuLengkap = now.toLocaleString("id-ID");
-
-                        await push(ref(db, "checkout"), {
-                            nama: nama,
-                            pesanan: pesanan,
-                            total: total,
-                            waktu: waktuLengkap,
-                            transaksi_id: result.transaction_id,
-                            status: result.transaction_status
-                        });
-
+                    onSuccess: function(result) {
                         alert("Pembayaran Berhasil! Terima kasih 🎉");
                         localStorage.removeItem("pesanan");
                         window.location.href = "index.html";
                     },
-                    onPending: () => {
+                    onPending: function() {
                         alert("Menunggu pembayaran...");
                         bayarBtn.disabled = false;
                         bayarBtn.textContent = "Bayar Sekarang →";
                     },
-                    onError: () => {
+                    onError: function() {
                         alert("Pembayaran gagal, coba lagi ya!");
                         bayarBtn.disabled = false;
                         bayarBtn.textContent = "Bayar Sekarang →";
                     },
-                    onClose: () => {
+                    onClose: function() {
                         bayarBtn.disabled = false;
                         bayarBtn.textContent = "Bayar Sekarang →";
                     }
@@ -400,13 +368,13 @@
             }
         })
         .catch(err => {
-            console.error(err);
+            console.error("Fetch error:", err);
             alert("Gagal terhubung ke server. Coba lagi!");
             bayarBtn.disabled = false;
             bayarBtn.textContent = "Bayar Sekarang →";
         });
     });
 </script>
-
+ 
 </body>
 </html>
