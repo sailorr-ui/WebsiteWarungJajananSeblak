@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Warung Jajanan Seblak</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+            --accent-color: #f43f5e;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--primary-gradient); background-attachment: fixed; color: var(--text-main); min-height: 100vh; padding: 30px 20px; }
+
+        /* LOGIN */
+        .login-wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .login-card {
+            background: var(--glass-bg); backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); border-radius: 24px;
+            padding: 40px; width: 100%; max-width: 420px;
+        }
+        .login-card h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; background: linear-gradient(to right, #fff, #f43f5e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .login-card p { color: var(--text-dim); margin-bottom: 30px; font-size: 0.9rem; }
+
+        /* FORM */
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-dim); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .form-group input {
+            width: 100%; padding: 14px 18px; border-radius: 14px;
+            border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2);
+            color: white; font-size: 0.95rem; outline: none; transition: all 0.3s;
+        }
+        .form-group input:focus { border-color: var(--accent-color); background: rgba(0,0,0,0.4); }
+
+        .btn {
+            padding: 14px 24px; border-radius: 14px; border: none;
+            font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.3s;
+        }
+        .btn-primary { background: var(--accent-color); color: white; width: 100%; box-shadow: 0 8px 20px rgba(244,63,94,0.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(244,63,94,0.5); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; font-size: 0.8rem; padding: 8px 14px; }
+        .btn-edit { background: rgba(255,255,255,0.1); color: white; font-size: 0.8rem; padding: 8px 14px; border: 1px solid var(--glass-border); }
+        .btn-sm { padding: 8px 16px; font-size: 0.85rem; }
+
+        /* ADMIN PANEL */
+        #admin-panel { display: none; max-width: 900px; margin: 0 auto; }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: gap; gap: 15px; }
+        .admin-header h1 { font-size: 2rem; font-weight: 800; background: linear-gradient(to right, #fff, #f43f5e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .btn-logout { background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: var(--text-dim); padding: 10px 20px; border-radius: 12px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.3s; }
+        .btn-logout:hover { background: rgba(255,255,255,0.15); color: white; }
+
+        .card {
+            background: var(--glass-bg); backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border); border-radius: 20px; padding: 28px; margin-bottom: 25px;
+        }
+        .card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; color: var(--accent-color); }
+
+        /* FORM TAMBAH MENU */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+        .form-grid .full { grid-column: 1 / -1; }
+
+        /* DAFTAR MENU */
+        .menu-item {
+            display: flex; align-items: center; gap: 15px;
+            padding: 15px; border-radius: 14px; background: rgba(0,0,0,0.2);
+            border: 1px solid var(--glass-border); margin-bottom: 12px;
+        }
+        .menu-item img { width: 70px; height: 70px; object-fit: cover; border-radius: 10px; flex-shrink: 0; }
+        .menu-item-info { flex: 1; }
+        .menu-item-info h4 { font-size: 1rem; font-weight: 700; margin-bottom: 3px; }
+        .menu-item-info p { font-size: 0.85rem; color: var(--accent-color); font-weight: 600; }
+        .menu-item-info span { font-size: 0.75rem; color: var(--text-dim); }
+        .menu-item-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+        /* MODAL EDIT */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: #1e1b4b; border: 1px solid var(--glass-border); border-radius: 24px; padding: 30px; width: 100%; max-width: 500px; }
+        .modal h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 20px; }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+        /* TOAST */
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 14px 28px; border-radius: 12px; font-weight: 600; z-index: 9999; font-size: 0.9rem; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
+        .toast.success { background: var(--success); color: white; }
+        .toast.error { background: var(--danger); color: white; }
+
+        .error-msg { color: #f87171; font-size: 0.8rem; margin-top: 8px; display: none; }
+        .preview-img { width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-top: 10px; display: none; border: 1px solid var(--glass-border); }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrapper" id="login-wrapper">
+    <div class="login-card">
+        <h2>Admin Panel</h2>
+        <p>Warung Jajanan Seblak — Kelola menu dengan mudah</p>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="text" id="login-email" placeholder="admin@email.com">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-password" placeholder="••••••••">
+            <div class="error-msg" id="login-error">Email atau password salah.</div>
+        </div>
+        <button class="btn btn-primary" id="login-btn">Masuk</button>
+    </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-panel">
+    <div class="admin-header">
+        <h1>Panel Admin</h1>
+        <button class="btn-logout" id="logout-btn">Keluar</button>
+    </div>
+
+    <!-- Tambah Menu -->
+    <div class="card">
+        <h3>+ Tambah Menu Baru</h3>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Nama Menu</label>
+                <input type="text" id="add-nama" placeholder="Contoh: Seblak Mie Sosis">
+            </div>
+            <div class="form-group">
+                <label>Harga (Rp)</label>
+                <input type="number" id="add-harga" placeholder="Contoh: 15000">
+            </div>
+            <div class="form-group">
+                <label>Kategori</label>
+                <input type="text" id="add-kategori" placeholder="Makanan / Minuman">
+            </div>
+            <div class="form-group">
+                <label>Label Catatan</label>
+                <input type="text" id="add-note-label" placeholder="Contoh: Tingkat Kepedasan">
+            </div>
+            <div class="form-group">
+                <label>Urutan Tampil</label>
+                <input type="number" id="add-urutan" placeholder="Contoh: 7">
+            </div>
+            <div class="form-group full">
+                <label>URL Gambar</label>
+                <input type="text" id="add-gambar" placeholder="https://raw.githubusercontent.com/...">
+                <img id="preview-add" class="preview-img" alt="Preview">
+            </div>
+        </div>
+        <button class="btn btn-success btn-sm" id="add-btn">Simpan Menu</button>
+    </div>
+
+    <!-- Daftar Menu -->
+    <div class="card">
+        <h3>Daftar Menu</h3>
+        <div id="menu-list"><p style="color:var(--text-dim)">Memuat menu...</p></div>
+    </div>
+</div>
+
+<!-- Modal Edit -->
+<div class="modal-overlay" id="edit-modal">
+    <div class="modal">
+        <h3>Edit Menu</h3>
+        <input type="hidden" id="edit-id">
+        <div class="form-group">
+            <label>Nama Menu</label>
+            <input type="text" id="edit-nama">
+        </div>
+        <div class="form-group">
+            <label>Harga (Rp)</label>
+            <input type="number" id="edit-harga">
+        </div>
+        <div class="form-group">
+            <label>Kategori</label>
+            <input type="text" id="edit-kategori">
+        </div>
+        <div class="form-group">
+            <label>Label Catatan</label>
+            <input type="text" id="edit-note-label">
+        </div>
+        <div class="form-group">
+            <label>Urutan</label>
+            <input type="number" id="edit-urutan">
+        </div>
+        <div class="form-group">
+            <label>URL Gambar</label>
+            <input type="text" id="edit-gambar">
+            <img id="preview-edit" class="preview-img" alt="Preview">
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-edit" id="cancel-edit">Batal</button>
+            <button class="btn btn-primary btn-sm" id="save-edit">Simpan Perubahan</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyByJZfVx5RjFVWCbpSOJ5gfeHnmvq8_pbA",
+        authDomain: "warung-ilyasah-76d92.firebaseapp.com",
+        projectId: "warung-ilyasah-76d92",
+        storageBucket: "warung-ilyasah-76d92.firebasestorage.app",
+        messagingSenderId: "144030007267",
+        appId: "1:144030007267:web:c9ca13753ad98a7f4aead6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // Toast
+    function showToast(msg, type = 'success') {
+        const t = document.createElement('div');
+        t.className = `toast ${type}`;
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3000);
+    }
+
+    // Auth state
+    onAuthStateChanged(auth, user => {
+        if (user) {
+            document.getElementById('login-wrapper').style.display = 'none';
+            document.getElementById('admin-panel').style.display = 'block';
+            loadMenu();
+        } else {
+            document.getElementById('login-wrapper').style.display = 'flex';
+            document.getElementById('admin-panel').style.display = 'none';
+        }
+    });
+
+    // Login
+    document.getElementById('login-btn').addEventListener('click', async () => {
+        const email = document.getElementById('login-email').value.trim();
+        const pass = document.getElementById('login-password').value;
+        const errEl = document.getElementById('login-error');
+        errEl.style.display = 'none';
+        try {
+            await signInWithEmailAndPassword(auth, email, pass);
+        } catch {
+            errEl.style.display = 'block';
+        }
+    });
+
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+
+    // Load Menu
+    async function loadMenu() {
+        const list = document.getElementById('menu-list');
+        list.innerHTML = '<p style="color:var(--text-dim)">Memuat...</p>';
+        try {
+            const q = query(collection(db, "menu"), orderBy("urutan"));
+            const snap = await getDocs(q);
+            list.innerHTML = '';
+            snap.forEach(docSnap => {
+                const m = docSnap.data();
+                const el = document.createElement('div');
+                el.className = 'menu-item';
+                el.innerHTML = `
+                    <img src="${m.gambar}" alt="${m.nama}" onerror="this.src='https://placehold.co/70x70/1e1b4b/f43f5e?text=?'">
+                    <div class="menu-item-info">
+                        <h4>${m.nama}</h4>
+                        <p>Rp${Number(m.harga).toLocaleString('id-ID')}</p>
+                        <span>${m.kategori} · Urutan ${m.urutan}</span>
+                    </div>
+                    <div class="menu-item-actions">
+                        <button class="btn btn-edit" onclick="openEdit('${docSnap.id}', ${JSON.stringify(m).replace(/"/g, '&quot;')})">Edit</button>
+                        <button class="btn btn-danger" onclick="hapusMenu('${docSnap.id}', '${m.nama}')">Hapus</button>
+                    </div>
+                `;
+                list.appendChild(el);
+            });
+            if (snap.empty) list.innerHTML = '<p style="color:var(--text-dim)">Belum ada menu.</p>';
+        } catch (e) {
+            list.innerHTML = '<p style="color:#f87171">Gagal memuat menu.</p>';
+        }
+    }
+
+    // Preview gambar tambah
+    document.getElementById('add-gambar').addEventListener('input', function() {
+        const prev = document.getElementById('preview-add');
+        if (this.value) { prev.src = this.value; prev.style.display = 'block'; }
+        else prev.style.display = 'none';
+    });
+
+    // Tambah Menu
+    document.getElementById('add-btn').addEventListener('click', async () => {
+        const nama = document.getElementById('add-nama').value.trim();
+        const harga = parseInt(document.getElementById('add-harga').value);
+        const kategori = document.getElementById('add-kategori').value.trim();
+        const noteLabel = document.getElementById('add-note-label').value.trim();
+        const urutan = parseInt(document.getElementById('add-urutan').value);
+        const gambar = document.getElementById('add-gambar').value.trim();
+
+        if (!nama || !harga || !kategori || !gambar) {
+            showToast('Lengkapi semua field wajib!', 'error'); return;
+        }
+
+        try {
+            await addDoc(collection(db, "menu"), { nama, harga, kategori, note_label: noteLabel || 'Catatan', urutan: urutan || 99, gambar });
+            showToast('Menu berhasil ditambahkan!');
+            document.getElementById('add-nama').value = '';
+            document.getElementById('add-harga').value = '';
+            document.getElementById('add-kategori').value = '';
+            document.getElementById('add-note-label').value = '';
+            document.getElementById('add-urutan').value = '';
+            document.getElementById('add-gambar').value = '';
+            document.getElementById('preview-add').style.display = 'none';
+            loadMenu();
+        } catch { showToast('Gagal menambahkan menu.', 'error'); }
+    });
+
+    // Open Edit Modal
+    window.openEdit = function(id, data) {
+        document.getElementById('edit-id').value = id;
+        document.getElementById('edit-nama').value = data.nama;
+        document.getElementById('edit-harga').value = data.harga;
+        document.getElementById('edit-kategori').value = data.kategori;
+        document.getElementById('edit-note-label').value = data.note_label;
+        document.getElementById('edit-urutan').value = data.urutan;
+        document.getElementById('edit-gambar').value = data.gambar;
+        const prev = document.getElementById('preview-edit');
+        prev.src = data.gambar; prev.style.display = 'block';
+        document.getElementById('edit-modal').classList.add('active');
+    };
+
+    // Preview gambar edit
+    document.getElementById('edit-gambar').addEventListener('input', function() {
+        const prev = document.getElementById('preview-edit');
+        if (this.value) { prev.src = this.value; prev.style.display = 'block'; }
+        else prev.style.display = 'none';
+    });
+
+    // Cancel edit
+    document.getElementById('cancel-edit').addEventListener('click', () => {
+        document.getElementById('edit-modal').classList.remove('active');
+    });
+
+    // Save edit
+    document.getElementById('save-edit').addEventListener('click', async () => {
+        const id = document.getElementById('edit-id').value;
+        const data = {
+            nama: document.getElementById('edit-nama').value.trim(),
+            harga: parseInt(document.getElementById('edit-harga').value),
+            kategori: document.getElementById('edit-kategori').value.trim(),
+            note_label: document.getElementById('edit-note-label').value.trim(),
+            urutan: parseInt(document.getElementById('edit-urutan').value),
+            gambar: document.getElementById('edit-gambar').value.trim()
+        };
+        try {
+            await updateDoc(doc(db, "menu", id), data);
+            showToast('Menu berhasil diperbarui!');
+            document.getElementById('edit-modal').classList.remove('active');
+            loadMenu();
+        } catch { showToast('Gagal memperbarui menu.', 'error'); }
+    });
+
+    // Hapus Menu
+    window.hapusMenu = async function(id, nama) {
+        if (!confirm(`Yakin hapus menu "${nama}"?`)) return;
+        try {
+            await deleteDoc(doc(db, "menu", id));
+            showToast('Menu berhasil dihapus!');
+            loadMenu();
+        } catch { showToast('Gagal menghapus menu.', 'error'); }
+    };
+</script>
+
+</body>
+</html>
