@@ -57,7 +57,7 @@ h1 {
 .produk:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.4); border-color: rgba(244, 63, 94, 0.3); }
 .produk img { width: 100%; height: 200px; object-fit: cover; border-radius: 18px; margin-bottom: 15px; }
 .produk h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 5px; }
-.harga { color: var(--accent-color); font-weight: 800; font-size: 1.4rem; margin-bottom: 15px; transition: all 0.2s ease; }
+.harga { color: var(--accent-color); font-weight: 800; font-size: 1.4rem; margin-bottom: 15px; }
 .note-container { margin-bottom: 20px; }
 .note-label { display: block; font-size: 0.8rem; color: var(--text-dim); margin-bottom: 8px; }
 .note-input {
@@ -66,21 +66,7 @@ h1 {
 }
 .note-input:focus { border-color: var(--accent-color); }
 
-/* Opsi tambahan (clickable priced add-ons) */
-.opsi-container { margin-bottom: 20px; }
-.opsi-list { display: flex; flex-wrap: wrap; gap: 8px; }
-.opsi-chip {
-  background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border);
-  color: var(--text-main); font-size: 0.8rem; font-weight: 600;
-  padding: 8px 14px; border-radius: 30px; cursor: pointer;
-  transition: all 0.2s ease; outline: none;
-}
-.opsi-chip:hover { border-color: var(--accent-color); }
-.opsi-chip.active {
-  background: var(--accent-color); border-color: var(--accent-color); color: white;
-  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.4);
-}
-
+/* Counter lama (untuk menu TANPA opsi tambahan) */
 .counter {
   display: flex; align-items: center; justify-content: space-between;
   background: rgba(0,0,0,0.3); border-radius: 15px; padding: 5px; margin-top: auto;
@@ -92,6 +78,28 @@ h1 {
 }
 .counter button:active { opacity: 0.7; }
 .jumlah { font-weight: 700; font-size: 1.1rem; }
+
+/* Baris opsi dengan counter masing-masing (untuk menu DENGAN opsi tambahan) */
+.opsi-rows-wrap { margin-top: auto; }
+.opsi-row-item {
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border);
+  border-radius: 14px; padding: 10px 12px; margin-bottom: 10px;
+}
+.opsi-row-item:last-child { margin-bottom: 0; }
+.opsi-row-info { display: flex; flex-direction: column; }
+.opsi-row-name { font-size: 0.9rem; font-weight: 600; }
+.opsi-row-add { font-size: 0.75rem; color: var(--accent-color); font-weight: 600; }
+.mini-counter { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.mini-counter button {
+  width: 30px; height: 30px; border-radius: 9px; border: none;
+  background: var(--accent-color); color: white; font-size: 1rem;
+  font-weight: bold; cursor: pointer; transition: opacity 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.mini-counter button:active { opacity: 0.7; }
+.mini-jumlah { font-weight: 700; font-size: 0.95rem; min-width: 16px; text-align: center; }
+
 .checkout-container {
   position: fixed; bottom: 0; left: 0; right: 0;
   background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(20px);
@@ -172,94 +180,111 @@ async function loadMenu() {
     snapshot.forEach(docSnap => {
       const m = docSnap.data();
       const opsiTambahan = Array.isArray(m.opsi_tambahan) ? m.opsi_tambahan : [];
+      const hargaDasar = Number(m.harga);
 
       const card = document.createElement('div');
       card.className = 'produk';
       card.dataset.nama = m.nama.toLowerCase();
 
-      // Bagian opsi tambahan ATAU catatan bebas (fallback jika menu belum punya opsi)
-      let extraSectionHTML = '';
       if (opsiTambahan.length > 0) {
-        extraSectionHTML = `
-          <div class="opsi-container">
-            <label class="note-label">${m.note_label || 'Opsi Tambahan'}</label>
-            <div class="opsi-list"></div>
+        // ==== Menu DENGAN opsi tambahan: setiap opsi (+ "Original") punya counter sendiri ====
+        const semuaOpsi = [
+          { label: 'Original', harga: 0, isOriginal: true },
+          ...opsiTambahan.map(o => ({ label: o.label, harga: Number(o.harga), isOriginal: false }))
+        ];
+
+        const rowsHTML = semuaOpsi.map((o, idx) => `
+          <div class="opsi-row-item" data-idx="${idx}">
+            <div class="opsi-row-info">
+              <span class="opsi-row-name">${o.label}</span>
+              ${o.harga > 0 ? `<span class="opsi-row-add">+${formatRp(o.harga)}</span>` : ''}
+            </div>
+            <div class="mini-counter">
+              <button type="button" class="mc-minus">-</button>
+              <span class="mini-jumlah">0</span>
+              <button type="button" class="mc-plus">+</button>
+            </div>
+          </div>
+        `).join('');
+
+        card.innerHTML = `
+          <img src="${m.gambar}" alt="${m.nama}" onerror="this.src='https://placehold.co/400x200/1e1b4b/f43f5e?text=No+Image'">
+          <h2>${m.nama}</h2>
+          <p class="harga">${formatRp(hargaDasar)}</p>
+          <div class="opsi-rows-wrap">
+            <span class="note-label">${m.note_label || 'Pilihan'}</span>
+            ${rowsHTML}
           </div>
         `;
+
+        // Counter logic per baris opsi
+        card.querySelectorAll('.opsi-row-item').forEach((row, idx) => {
+          const jumlahElem = row.querySelector('.mini-jumlah');
+          const plus = row.querySelector('.mc-plus');
+          const minus = row.querySelector('.mc-minus');
+          let jumlah = 0;
+          plus.addEventListener('click', () => { jumlah++; jumlahElem.textContent = jumlah; });
+          minus.addEventListener('click', () => { if (jumlah > 0) { jumlah--; jumlahElem.textContent = jumlah; } });
+        });
+
+        // Getter data pesanan: bisa hasilkan LEBIH DARI SATU baris pesanan per produk
+        card._getPesananData = () => {
+          const hasil = [];
+          card.querySelectorAll('.opsi-row-item').forEach((row, idx) => {
+            const jumlah = parseInt(row.querySelector('.mini-jumlah').textContent);
+            if (jumlah > 0) {
+              const o = semuaOpsi[idx];
+              hasil.push({
+                nama: m.nama,
+                harga: hargaDasar + o.harga,
+                jumlah: jumlah,
+                note: '',
+                opsiLabel: o.isOriginal ? '' : o.label,
+                opsiHarga: o.isOriginal ? 0 : o.harga
+              });
+            }
+          });
+          return hasil;
+        };
+
       } else {
-        extraSectionHTML = `
+        // ==== Menu TANPA opsi tambahan: perilaku lama (1 counter + catatan bebas) ====
+        card.innerHTML = `
+          <img src="${m.gambar}" alt="${m.nama}" onerror="this.src='https://placehold.co/400x200/1e1b4b/f43f5e?text=No+Image'">
+          <h2>${m.nama}</h2>
+          <p class="harga">${formatRp(hargaDasar)}</p>
           <div class="note-container">
             <label class="note-label">${m.note_label || 'Catatan'}</label>
             <input type="text" class="note note-input" placeholder="Tambahkan catatan...">
           </div>
+          <div class="counter">
+            <button class="minus">-</button>
+            <span class="jumlah">0</span>
+            <button class="plus">+</button>
+          </div>
         `;
-      }
 
-      card.innerHTML = `
-        <img src="${m.gambar}" alt="${m.nama}" onerror="this.src='https://placehold.co/400x200/1e1b4b/f43f5e?text=No+Image'">
-        <h2>${m.nama}</h2>
-        <p class="harga">${formatRp(m.harga)}</p>
-        ${extraSectionHTML}
-        <div class="counter">
-          <button class="minus">-</button>
-          <span class="jumlah">0</span>
-          <button class="plus">+</button>
-        </div>
-      `;
+        const plus = card.querySelector('.plus');
+        const minus = card.querySelector('.minus');
+        const jumlahElem = card.querySelector('.jumlah');
+        let jumlah = 0;
+        plus.addEventListener('click', () => { jumlah++; jumlahElem.textContent = jumlah; });
+        minus.addEventListener('click', () => { if (jumlah > 0) { jumlah--; jumlahElem.textContent = jumlah; } });
 
-      // State per-card: opsi tambahan yang sedang dipilih (hanya 1 pada satu waktu, atau tidak ada)
-      let selectedOpsi = null; // { label, harga }
-      const hargaElem = card.querySelector('.harga');
-
-      function updateHargaDisplay() {
-        const totalSatuan = Number(m.harga) + (selectedOpsi ? Number(selectedOpsi.harga) : 0);
-        hargaElem.textContent = formatRp(totalSatuan);
-      }
-
-      if (opsiTambahan.length > 0) {
-        const opsiList = card.querySelector('.opsi-list');
-        opsiTambahan.forEach(opsi => {
-          const chip = document.createElement('button');
-          chip.type = 'button';
-          chip.className = 'opsi-chip';
-          chip.textContent = `${opsi.label} (+${formatRp(opsi.harga)})`;
-          chip.addEventListener('click', () => {
-            const isActive = chip.classList.contains('active');
-            // reset semua chip di produk ini (hanya 1 opsi aktif per produk)
-            opsiList.querySelectorAll('.opsi-chip').forEach(c => c.classList.remove('active'));
-            if (isActive) {
-              selectedOpsi = null; // klik lagi opsi yang sama = batal pilih
-            } else {
-              chip.classList.add('active');
-              selectedOpsi = { label: opsi.label, harga: Number(opsi.harga) };
-            }
-            updateHargaDisplay();
-          });
-          opsiList.appendChild(chip);
-        });
-      }
-
-      // Counter logic
-      const plus = card.querySelector('.plus');
-      const minus = card.querySelector('.minus');
-      const jumlahElem = card.querySelector('.jumlah');
-      let jumlah = 0;
-      plus.addEventListener('click', () => { jumlah++; jumlahElem.textContent = jumlah; });
-      minus.addEventListener('click', () => { if (jumlah > 0) { jumlah--; jumlahElem.textContent = jumlah; } });
-
-      // Simpan getter data pesanan di elemen card, dipakai saat checkout
-      card._getPesananData = () => {
-        const noteInput = card.querySelector('.note-input');
-        return {
-          nama: m.nama,
-          hargaDasar: Number(m.harga),
-          harga: Number(m.harga) + (selectedOpsi ? Number(selectedOpsi.harga) : 0),
-          jumlah: jumlah,
-          note: noteInput ? noteInput.value.trim() : '',
-          opsiLabel: selectedOpsi ? selectedOpsi.label : '',
-          opsiHarga: selectedOpsi ? Number(selectedOpsi.harga) : 0
+        card._getPesananData = () => {
+          const noteInput = card.querySelector('.note-input');
+          const j = parseInt(jumlahElem.textContent);
+          if (j <= 0) return [];
+          return [{
+            nama: m.nama,
+            harga: hargaDasar,
+            jumlah: j,
+            note: noteInput ? noteInput.value.trim() : '',
+            opsiLabel: '',
+            opsiHarga: 0
+          }];
         };
-      };
+      }
 
       container.appendChild(card);
     });
@@ -283,15 +308,13 @@ document.getElementById('search-menu').addEventListener('keyup', function() {
   });
 });
 
-// Checkout
+// Checkout - setiap produk bisa menyumbang LEBIH DARI SATU baris pesanan
 document.getElementById('checkout-button').addEventListener('click', () => {
   const pesanan = [];
   document.querySelectorAll('.produk').forEach(produk => {
     if (typeof produk._getPesananData !== 'function') return;
-    const data = produk._getPesananData();
-    if (data.jumlah > 0) {
-      pesanan.push(data);
-    }
+    const dataList = produk._getPesananData();
+    dataList.forEach(d => pesanan.push(d));
   });
 
   if (pesanan.length === 0) {
