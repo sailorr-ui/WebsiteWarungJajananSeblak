@@ -49,6 +49,8 @@
         .btn-danger { background: var(--danger); color: white; font-size: 0.8rem; padding: 8px 14px; }
         .btn-edit { background: rgba(255,255,255,0.1); color: white; font-size: 0.8rem; padding: 8px 14px; border: 1px solid var(--glass-border); }
         .btn-sm { padding: 8px 16px; font-size: 0.85rem; }
+        .btn-outline { background: transparent; color: var(--accent-color); border: 1px dashed var(--accent-color); font-size: 0.8rem; padding: 8px 14px; }
+        .btn-remove-row { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); font-size: 0.85rem; padding: 0 12px; border-radius: 10px; cursor: pointer; }
 
         /* ADMIN PANEL */
         #admin-panel { display: none; max-width: 900px; margin: 0 auto; }
@@ -68,6 +70,13 @@
         @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
         .form-grid .full { grid-column: 1 / -1; }
 
+        /* OPSI TAMBAHAN */
+        .opsi-row { display: grid; grid-template-columns: 1fr 160px 44px; gap: 10px; margin-bottom: 10px; align-items: center; }
+        @media (max-width: 600px) { .opsi-row { grid-template-columns: 1fr 110px 40px; } }
+        .opsi-row input { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: white; font-size: 0.9rem; outline: none; }
+        .opsi-row input:focus { border-color: var(--accent-color); }
+        .opsi-hint { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 12px; }
+
         /* DAFTAR MENU */
         .menu-item {
             display: flex; align-items: center; gap: 15px;
@@ -79,12 +88,14 @@
         .menu-item-info h4 { font-size: 1rem; font-weight: 700; margin-bottom: 3px; }
         .menu-item-info p { font-size: 0.85rem; color: var(--accent-color); font-weight: 600; }
         .menu-item-info span { font-size: 0.75rem; color: var(--text-dim); }
+        .menu-item-info .opsi-tags { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+        .menu-item-info .opsi-tag { font-size: 0.7rem; background: rgba(244,63,94,0.15); color: var(--accent-color); padding: 3px 10px; border-radius: 20px; font-weight: 600; }
         .menu-item-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
         /* MODAL EDIT */
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
         .modal-overlay.active { display: flex; }
-        .modal { background: #1e1b4b; border: 1px solid var(--glass-border); border-radius: 24px; padding: 30px; width: 100%; max-width: 500px; }
+        .modal { background: #1e1b4b; border: 1px solid var(--glass-border); border-radius: 24px; padding: 30px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
         .modal h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 20px; }
         .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
 
@@ -141,7 +152,7 @@
                 <input type="text" id="add-kategori" placeholder="Makanan / Minuman">
             </div>
             <div class="form-group">
-                <label>Label Catatan</label>
+                <label>Label Catatan / Opsi</label>
                 <input type="text" id="add-note-label" placeholder="Contoh: Tingkat Kepedasan">
             </div>
             <div class="form-group">
@@ -153,7 +164,14 @@
                 <input type="text" id="add-gambar" placeholder="https://raw.githubusercontent.com/...">
                 <img id="preview-add" class="preview-img" alt="Preview">
             </div>
+            <div class="form-group full">
+                <label>Opsi Tambahan Berbayar (Opsional)</label>
+                <p class="opsi-hint">Contoh: "Level Pedas 2" +Rp1.000, "Tambah Telur" +Rp4.000, "Extra Susu" +Rp2.000. Pembeli hanya bisa pilih salah satu opsi per menu. Kosongkan jika menu ini tidak butuh opsi tambahan (akan pakai kolom catatan bebas seperti biasa).</p>
+                <div id="add-opsi-rows"></div>
+                <button type="button" class="btn btn-outline" id="add-opsi-row-btn">+ Tambah Opsi</button>
+            </div>
         </div>
+        <br>
         <button class="btn btn-success btn-sm" id="add-btn">Simpan Menu</button>
     </div>
 
@@ -182,7 +200,7 @@
             <input type="text" id="edit-kategori">
         </div>
         <div class="form-group">
-            <label>Label Catatan</label>
+            <label>Label Catatan / Opsi</label>
             <input type="text" id="edit-note-label">
         </div>
         <div class="form-group">
@@ -193,6 +211,12 @@
             <label>URL Gambar</label>
             <input type="text" id="edit-gambar">
             <img id="preview-edit" class="preview-img" alt="Preview">
+        </div>
+        <div class="form-group">
+            <label>Opsi Tambahan Berbayar (Opsional)</label>
+            <p class="opsi-hint">Kosongkan semua baris jika menu ini tidak butuh opsi tambahan.</p>
+            <div id="edit-opsi-rows"></div>
+            <button type="button" class="btn btn-outline" id="edit-opsi-row-btn">+ Tambah Opsi</button>
         </div>
         <div class="modal-actions">
             <button class="btn btn-edit" id="cancel-edit">Batal</button>
@@ -227,6 +251,41 @@
         document.body.appendChild(t);
         setTimeout(() => t.remove(), 3000);
     }
+
+    // ---------- Opsi Tambahan: helper baris dinamis ----------
+    function addOpsiRow(containerId, label = '', harga = '') {
+        const container = document.getElementById(containerId);
+        const row = document.createElement('div');
+        row.className = 'opsi-row';
+        row.innerHTML = `
+            <input type="text" class="opsi-label" placeholder="Contoh: Level Pedas 2" value="${label}">
+            <input type="number" class="opsi-harga" placeholder="Tambahan (Rp)" value="${harga}">
+            <button type="button" class="btn-remove-row">&times;</button>
+        `;
+        row.querySelector('.btn-remove-row').addEventListener('click', () => row.remove());
+        container.appendChild(row);
+    }
+
+    function collectOpsiRows(containerId) {
+        const container = document.getElementById(containerId);
+        const rows = container.querySelectorAll('.opsi-row');
+        const result = [];
+        rows.forEach(row => {
+            const label = row.querySelector('.opsi-label').value.trim();
+            const harga = parseInt(row.querySelector('.opsi-harga').value);
+            if (label && !isNaN(harga)) {
+                result.push({ label, harga });
+            }
+        });
+        return result;
+    }
+
+    function clearOpsiRows(containerId) {
+        document.getElementById(containerId).innerHTML = '';
+    }
+
+    document.getElementById('add-opsi-row-btn').addEventListener('click', () => addOpsiRow('add-opsi-rows'));
+    document.getElementById('edit-opsi-row-btn').addEventListener('click', () => addOpsiRow('edit-opsi-rows'));
 
     // Auth state
     onAuthStateChanged(auth, user => {
@@ -266,6 +325,10 @@
             list.innerHTML = '';
             snap.forEach(docSnap => {
                 const m = docSnap.data();
+                const opsiTambahan = Array.isArray(m.opsi_tambahan) ? m.opsi_tambahan : [];
+                const opsiTagsHTML = opsiTambahan.length > 0
+                    ? `<div class="opsi-tags">${opsiTambahan.map(o => `<span class="opsi-tag">${o.label} +Rp${Number(o.harga).toLocaleString('id-ID')}</span>`).join('')}</div>`
+                    : '';
                 const el = document.createElement('div');
                 el.className = 'menu-item';
                 el.innerHTML = `
@@ -274,6 +337,7 @@
                         <h4>${m.nama}</h4>
                         <p>Rp${Number(m.harga).toLocaleString('id-ID')}</p>
                         <span>${m.kategori} · Urutan ${m.urutan}</span>
+                        ${opsiTagsHTML}
                     </div>
                     <div class="menu-item-actions">
                         <button class="btn btn-edit" onclick="openEdit('${docSnap.id}', ${JSON.stringify(m).replace(/"/g, '&quot;')})">Edit</button>
@@ -303,13 +367,20 @@
         const noteLabel = document.getElementById('add-note-label').value.trim();
         const urutan = parseInt(document.getElementById('add-urutan').value);
         const gambar = document.getElementById('add-gambar').value.trim();
+        const opsiTambahan = collectOpsiRows('add-opsi-rows');
 
         if (!nama || !harga || !kategori || !gambar) {
             showToast('Lengkapi semua field wajib!', 'error'); return;
         }
 
         try {
-            await addDoc(collection(db, "menu"), { nama, harga, kategori, note_label: noteLabel || 'Catatan', urutan: urutan || 99, gambar });
+            await addDoc(collection(db, "menu"), {
+                nama, harga, kategori,
+                note_label: noteLabel || 'Catatan',
+                urutan: urutan || 99,
+                gambar,
+                opsi_tambahan: opsiTambahan
+            });
             showToast('Menu berhasil ditambahkan!');
             document.getElementById('add-nama').value = '';
             document.getElementById('add-harga').value = '';
@@ -318,6 +389,7 @@
             document.getElementById('add-urutan').value = '';
             document.getElementById('add-gambar').value = '';
             document.getElementById('preview-add').style.display = 'none';
+            clearOpsiRows('add-opsi-rows');
             loadMenu();
         } catch { showToast('Gagal menambahkan menu.', 'error'); }
     });
@@ -333,6 +405,11 @@
         document.getElementById('edit-gambar').value = data.gambar;
         const prev = document.getElementById('preview-edit');
         prev.src = data.gambar; prev.style.display = 'block';
+
+        clearOpsiRows('edit-opsi-rows');
+        const opsiTambahan = Array.isArray(data.opsi_tambahan) ? data.opsi_tambahan : [];
+        opsiTambahan.forEach(o => addOpsiRow('edit-opsi-rows', o.label, o.harga));
+
         document.getElementById('edit-modal').classList.add('active');
     };
 
@@ -357,7 +434,8 @@
             kategori: document.getElementById('edit-kategori').value.trim(),
             note_label: document.getElementById('edit-note-label').value.trim(),
             urutan: parseInt(document.getElementById('edit-urutan').value),
-            gambar: document.getElementById('edit-gambar').value.trim()
+            gambar: document.getElementById('edit-gambar').value.trim(),
+            opsi_tambahan: collectOpsiRows('edit-opsi-rows')
         };
         try {
             await updateDoc(doc(db, "menu", id), data);
