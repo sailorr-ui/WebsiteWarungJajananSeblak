@@ -1,4 +1,5 @@
 const midtransClient = require('midtrans-client');
+const { db, admin } = require('../lib/firebaseAdmin');
  
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -50,9 +51,11 @@ module.exports = async (req, res) => {
         .trim()
         .substring(0, 50);
  
+    const orderId = `ORDER_${Date.now()}`;
+ 
     const parameter = {
         transaction_details: {
-            order_id: `ORDER_${Date.now()}`,
+            order_id: orderId,
             gross_amount: total
         },
         item_details: item_details,
@@ -63,7 +66,26 @@ module.exports = async (req, res) => {
  
     try {
         const transaction = await snap.createTransaction(parameter);
-        res.status(200).json({ token: transaction.token });
+ 
+        // Simpan salinan data transaksi ke Firestore supaya bisa ditampilkan
+        // di panel admin tanpa harus buka dashboard Midtrans terpisah.
+        try {
+            await db.collection('transaksi').doc(orderId).set({
+                order_id: orderId,
+                nama_pemesan: nama || 'Pelanggan',
+                items: pesanan || [],
+                total: total,
+                status: 'pending',
+                created_at: admin.firestore.FieldValue.serverTimestamp(),
+                updated_at: admin.firestore.FieldValue.serverTimestamp(),
+            });
+        } catch (fireErr) {
+            // Kalau gagal simpan ke Firestore, jangan gagalkan proses pembayaran.
+            // Cukup catat di log server, transaksi Midtrans tetap jalan.
+            console.error('Gagal simpan transaksi ke Firestore:', fireErr);
+        }
+ 
+        res.status(200).json({ token: transaction.token, order_id: orderId });
     } catch (err) {
         console.error('Midtrans error:', err);
         res.status(500).json({ error: err.message });
