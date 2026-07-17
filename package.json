@@ -2,6 +2,7 @@
     "name": "website-warung-jajanan-seblak",
     "version": "1.0.0",
     "dependencies": {
-        "midtrans-client": "^1.4.0"
+        "midtrans-client": "^1.4.0",
+        "firebase-admin": "^12.0.0"
     }
 }
