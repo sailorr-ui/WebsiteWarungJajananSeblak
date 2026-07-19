@@ -128,6 +128,22 @@
         .status-expire, .status-cancel, .status-deny { background: rgba(239,68,68,0.15); color:#ef4444; }
         .status-refund { background: rgba(148,163,184,0.15); color:#94a3b8; }
 
+        .proses-toggle {
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+            border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: var(--text-dim);
+            transition: all 0.2s; user-select: none; margin-top: 6px;
+        }
+        .proses-toggle:hover { border-color: var(--accent-color); }
+        .proses-toggle .proses-box {
+            width: 16px; height: 16px; border-radius: 5px; border: 2px solid var(--text-dim);
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .proses-toggle.done { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.4); color: #10b981; }
+        .proses-toggle.done .proses-box { background: #10b981; border-color: #10b981; }
+        .proses-toggle.done .proses-box::after { content: '✓'; color: white; font-size: 11px; font-weight: 900; }
+
         .trx-item { background: rgba(0,0,0,0.2); border:1px solid var(--glass-border); border-radius:14px; padding:16px; margin-bottom:12px; }
         .trx-item.trx-new { animation: highlight-new 2.5s ease; }
         @keyframes highlight-new {
@@ -588,12 +604,21 @@
             </div>
         `).join('');
 
+        const sudahDiproses = t.diproses === true;
+        const prosesToggleHTML = t.status === 'settlement' ? `
+            <div class="proses-toggle${sudahDiproses ? ' done' : ''}" data-order-id="${t.order_id}">
+                <span class="proses-box"></span>
+                <span class="proses-text">${sudahDiproses ? 'Sudah Diproses' : 'Tandai Sudah Diproses'}</span>
+            </div>
+        ` : '';
+
         return `
             <div class="trx-item${isNew ? ' trx-new' : ''}">
                 <div class="trx-header">
                     <div class="trx-header-left">
                         <h4>${t.nama_pemesan || 'Pelanggan'}</h4>
                         <span>${t.order_id} &middot; ${formatTanggal(t.created_at)}</span>
+                        ${prosesToggleHTML}
                     </div>
                     <div style="text-align:right;">
                         <div class="trx-total">Rp${Number(t.total || 0).toLocaleString('id-ID')}</div>
@@ -674,6 +699,22 @@
 
         const list = document.getElementById('trx-list');
         list.innerHTML = '<p style="color:var(--text-dim)">Memuat...</p>';
+
+        if (!list.dataset.listenerAttached) {
+            list.dataset.listenerAttached = 'true';
+            list.addEventListener('click', async (e) => {
+                const toggle = e.target.closest('.proses-toggle');
+                if (!toggle) return;
+                const orderId = toggle.dataset.orderId;
+                const isDone = toggle.classList.contains('done');
+                try {
+                    await updateDoc(doc(db, 'transaksi', orderId), { diproses: !isDone });
+                } catch (err) {
+                    console.error(err);
+                    showToast('Gagal update status diproses.', 'error');
+                }
+            });
+        }
 
         const q = query(collection(db, "transaksi"), orderBy("created_at", "desc"), limit(100));
 
