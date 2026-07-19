@@ -142,6 +142,23 @@
         .trx-item-line { display:flex; justify-content:space-between; font-size:0.85rem; padding:4px 0; color:var(--text-dim); }
         .trx-item-line b { color:var(--text-main); }
         .trx-refresh { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+
+        .date-group { margin-bottom: 14px; border: 1px solid var(--glass-border); border-radius: 16px; overflow: hidden; }
+        .date-group-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 18px; cursor: pointer; background: rgba(0,0,0,0.25);
+            transition: background 0.2s;
+        }
+        .date-group-header:hover { background: rgba(0,0,0,0.35); }
+        .date-group-header-left { display: flex; align-items: center; gap: 10px; }
+        .date-group-arrow { transition: transform 0.25s; font-size: 0.8rem; color: var(--text-dim); }
+        .date-group.open .date-group-arrow { transform: rotate(90deg); }
+        .date-group-title { font-weight: 700; font-size: 0.95rem; }
+        .date-group-badge { font-size: 0.72rem; background: rgba(244,63,94,0.15); color: var(--accent-color); padding: 3px 10px; border-radius: 20px; font-weight: 700; }
+        .date-group-total { font-weight: 800; color: var(--accent-color); font-size: 0.95rem; }
+        .date-group-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; padding: 0 14px; }
+        .date-group.open .date-group-body { max-height: 4000px; padding: 14px; }
+        .date-group-today .date-group-header { background: rgba(16,185,129,0.12); }
     </style>
 </head>
 <body>
@@ -552,6 +569,101 @@
         document.getElementById('sum-week-count').textContent = `${weekCount} transaksi lunas`;
     }
 
+    function tanggalKey(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    function formatJudulTanggal(d) {
+        return d.toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+    }
+
+    function renderTrxItem(t, isNew) {
+        const itemsHTML = (t.items || []).map(it => `
+            <div class="trx-item-line">
+                <span>${it.nama}${it.opsiLabel ? ' - ' + it.opsiLabel : (it.note ? ' - ' + it.note : '')} x${it.jumlah}</span>
+                <b>Rp${Number(it.harga * it.jumlah).toLocaleString('id-ID')}</b>
+            </div>
+        `).join('');
+
+        return `
+            <div class="trx-item${isNew ? ' trx-new' : ''}">
+                <div class="trx-header">
+                    <div class="trx-header-left">
+                        <h4>${t.nama_pemesan || 'Pelanggan'}</h4>
+                        <span>${t.order_id} &middot; ${formatTanggal(t.created_at)}</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="trx-total">Rp${Number(t.total || 0).toLocaleString('id-ID')}</div>
+                        <span class="status-badge status-${t.status}">${labelStatus(t.status)}</span>
+                    </div>
+                </div>
+                <div class="trx-items-list">${itemsHTML}</div>
+            </div>
+        `;
+    }
+
+    function renderGroupedTrx(dataList, list) {
+        // Kelompokkan transaksi berdasarkan tanggal (YYYY-MM-DD)
+        const groups = {};
+        dataList.forEach(t => {
+            if (!t.created_at) return;
+            const tgl = t.created_at.toDate ? t.created_at.toDate() : new Date(t.created_at);
+            const key = tanggalKey(tgl);
+            if (!groups[key]) {
+                groups[key] = { dateObj: tgl, items: [], totalLunas: 0, count: 0 };
+            }
+            groups[key].items.push(t);
+            groups[key].count++;
+            if (t.status === 'settlement') groups[key].totalLunas += Number(t.total || 0);
+        });
+
+        const todayKey = tanggalKey(new Date());
+        const sortedKeys = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+
+        // Simpan status buka/tutup grup yang sudah ada supaya tidak collapse saat data update real-time
+        const prevOpenState = {};
+        list.querySelectorAll('.date-group').forEach(g => {
+            prevOpenState[g.dataset.key] = g.classList.contains('open');
+        });
+
+        list.innerHTML = '';
+
+        sortedKeys.forEach(key => {
+            const g = groups[key];
+            const isToday = key === todayKey;
+            const wasOpen = prevOpenState.hasOwnProperty(key) ? prevOpenState[key] : isToday;
+
+            const groupEl = document.createElement('div');
+            groupEl.className = 'date-group' + (isToday ? ' date-group-today' : '') + (wasOpen ? ' open' : '');
+            groupEl.dataset.key = key;
+
+            const itemsHTML = g.items.map(t => renderTrxItem(t, !firstLoadTrx && !knownTrxIds.has(t.id))).join('');
+
+            groupEl.innerHTML = `
+                <div class="date-group-header">
+                    <div class="date-group-header-left">
+                        <span class="date-group-arrow">▶</span>
+                        <span class="date-group-title">${isToday ? 'Hari Ini — ' : ''}${formatJudulTanggal(g.dateObj)}</span>
+                        <span class="date-group-badge">${g.count} transaksi</span>
+                    </div>
+                    <div class="date-group-total">Rp${g.totalLunas.toLocaleString('id-ID')}</div>
+                </div>
+                <div class="date-group-body">${itemsHTML}</div>
+            `;
+
+            groupEl.querySelector('.date-group-header').addEventListener('click', () => {
+                groupEl.classList.toggle('open');
+            });
+
+            list.appendChild(groupEl);
+
+            g.items.forEach(t => knownTrxIds.add(t.id));
+        });
+    }
+
     let firstLoadTrx = true;
     let knownTrxIds = new Set();
     let lastDataList = [];
@@ -578,41 +690,13 @@
                 ringkasanInterval = setInterval(() => hitungRingkasan(lastDataList), 60000);
             }
 
-            list.innerHTML = '';
             if (dataList.length === 0) {
                 list.innerHTML = '<p style="color:var(--text-dim)">Belum ada transaksi.</p>';
+                firstLoadTrx = false;
                 return;
             }
 
-            dataList.forEach(t => {
-                const itemsHTML = (t.items || []).map(it => `
-                    <div class="trx-item-line">
-                        <span>${it.nama}${it.opsiLabel ? ' - ' + it.opsiLabel : (it.note ? ' - ' + it.note : '')} x${it.jumlah}</span>
-                        <b>Rp${Number(it.harga * it.jumlah).toLocaleString('id-ID')}</b>
-                    </div>
-                `).join('');
-
-                const isNew = !firstLoadTrx && !knownTrxIds.has(t.id);
-
-                const el = document.createElement('div');
-                el.className = 'trx-item' + (isNew ? ' trx-new' : '');
-                el.innerHTML = `
-                    <div class="trx-header">
-                        <div class="trx-header-left">
-                            <h4>${t.nama_pemesan || 'Pelanggan'}</h4>
-                            <span>${t.order_id} &middot; ${formatTanggal(t.created_at)}</span>
-                        </div>
-                        <div style="text-align:right;">
-                            <div class="trx-total">Rp${Number(t.total || 0).toLocaleString('id-ID')}</div>
-                            <span class="status-badge status-${t.status}">${labelStatus(t.status)}</span>
-                        </div>
-                    </div>
-                    <div class="trx-items-list">${itemsHTML}</div>
-                `;
-                list.appendChild(el);
-
-                knownTrxIds.add(t.id);
-            });
+            renderGroupedTrx(dataList, list);
 
             firstLoadTrx = false;
         }, (err) => {
