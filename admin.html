@@ -49,7 +49,6 @@
         .btn-sm { padding: 8px 16px; font-size: 0.85rem; }
         .btn-outline { background: transparent; color: var(--accent-color); border: 1px dashed var(--accent-color); font-size: 0.8rem; padding: 8px 14px; }
         .btn-remove-row { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); font-size: 0.85rem; padding: 0 12px; border-radius: 10px; cursor: pointer; }
-        .btn-refresh { background: rgba(255,255,255,0.08); border:1px solid var(--glass-border); color:var(--text-main); padding:8px 16px; border-radius:10px; cursor:pointer; font-size:0.8rem; font-weight:600; }
 
         #admin-panel { display: none; max-width: 900px; margin: 0 auto; }
         .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: gap; gap: 15px; }
@@ -100,7 +99,29 @@
         .error-msg { color: #f87171; font-size: 0.8rem; margin-top: 8px; display: none; }
         .preview-img { width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-top: 10px; display: none; border: 1px solid var(--glass-border); }
 
-        /* ==== Riwayat Transaksi ==== */
+        .live-dot {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+            background: var(--success); margin-right: 6px;
+            box-shadow: 0 0 0 0 rgba(16,185,129,0.5);
+            animation: pulse-dot 1.6s infinite;
+        }
+        @keyframes pulse-dot {
+            0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.5); }
+            70% { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+            100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+        }
+        .live-label { font-size: 0.75rem; color: var(--text-dim); display: flex; align-items: center; }
+
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 600px) { .summary-grid { grid-template-columns: 1fr; } }
+        .summary-box {
+            background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border);
+            border-radius: 16px; padding: 18px 20px;
+        }
+        .summary-box .summary-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .summary-box .summary-value { font-size: 1.6rem; font-weight: 800; color: var(--accent-color); margin-bottom: 4px; }
+        .summary-box .summary-sub { font-size: 0.8rem; color: var(--text-dim); }
+
         .status-badge { display:inline-block; padding:4px 12px; border-radius:20px; font-size:0.75rem; font-weight:700; }
         .status-settlement { background: rgba(16,185,129,0.15); color:#10b981; }
         .status-pending { background: rgba(59,130,246,0.15); color:#3b82f6; }
@@ -108,6 +129,11 @@
         .status-refund { background: rgba(148,163,184,0.15); color:#94a3b8; }
 
         .trx-item { background: rgba(0,0,0,0.2); border:1px solid var(--glass-border); border-radius:14px; padding:16px; margin-bottom:12px; }
+        .trx-item.trx-new { animation: highlight-new 2.5s ease; }
+        @keyframes highlight-new {
+            0% { background: rgba(16,185,129,0.25); border-color: rgba(16,185,129,0.6); }
+            100% { background: rgba(0,0,0,0.2); border-color: var(--glass-border); }
+        }
         .trx-header { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
         .trx-header-left h4 { font-size:1rem; font-weight:700; margin-bottom:2px; }
         .trx-header-left span { font-size:0.78rem; color:var(--text-dim); }
@@ -120,7 +146,6 @@
 </head>
 <body>
 
-<!-- LOGIN -->
 <div class="login-wrapper" id="login-wrapper">
     <div class="login-card">
         <h2>Admin Panel</h2>
@@ -138,14 +163,12 @@
     </div>
 </div>
 
-<!-- ADMIN PANEL -->
 <div id="admin-panel">
     <div class="admin-header">
         <h1>Panel Admin</h1>
         <button class="btn-logout" id="logout-btn">Keluar</button>
     </div>
 
-    <!-- Tambah Menu -->
     <div class="card">
         <h3>+ Tambah Menu Baru</h3>
         <div class="form-grid">
@@ -185,23 +208,39 @@
         <button class="btn btn-success btn-sm" id="add-btn">Simpan Menu</button>
     </div>
 
-    <!-- Daftar Menu -->
     <div class="card">
         <h3>Daftar Menu</h3>
         <div id="menu-list"><p style="color:var(--text-dim)">Memuat menu...</p></div>
     </div>
 
-    <!-- Riwayat Transaksi -->
+    <div class="card">
+        <div class="trx-refresh">
+            <h3 style="margin-bottom:0;">Ringkasan Transaksi</h3>
+            <span class="live-label"><span class="live-dot"></span>Live</span>
+        </div>
+        <div class="summary-grid">
+            <div class="summary-box">
+                <div class="summary-label">Hari Ini</div>
+                <div class="summary-value" id="sum-today-total">Rp0</div>
+                <div class="summary-sub" id="sum-today-count">0 transaksi lunas</div>
+            </div>
+            <div class="summary-box">
+                <div class="summary-label">7 Hari Terakhir</div>
+                <div class="summary-value" id="sum-week-total">Rp0</div>
+                <div class="summary-sub" id="sum-week-count">0 transaksi lunas</div>
+            </div>
+        </div>
+    </div>
+
     <div class="card">
         <div class="trx-refresh">
             <h3 style="margin-bottom:0;">Riwayat Transaksi</h3>
-            <button class="btn-refresh" id="refresh-trx-btn">🔄 Refresh</button>
+            <span class="live-label"><span class="live-dot"></span>Update otomatis</span>
         </div>
         <div id="trx-list"><p style="color:var(--text-dim)">Memuat transaksi...</p></div>
     </div>
 </div>
 
-<!-- Modal Edit -->
 <div class="modal-overlay" id="edit-modal">
     <div class="modal">
         <h3>Edit Menu</h3>
@@ -246,7 +285,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
@@ -270,7 +309,6 @@
         setTimeout(() => t.remove(), 3000);
     }
 
-    // ---------- Opsi Tambahan: helper baris dinamis ----------
     function addOpsiRow(containerId, label = '', harga = '') {
         const container = document.getElementById(containerId);
         const row = document.createElement('div');
@@ -305,16 +343,18 @@
     document.getElementById('add-opsi-row-btn').addEventListener('click', () => addOpsiRow('add-opsi-rows'));
     document.getElementById('edit-opsi-row-btn').addEventListener('click', () => addOpsiRow('edit-opsi-rows'));
 
-    // ---------- Auth ----------
+    let unsubscribeTransaksi = null;
+
     onAuthStateChanged(auth, user => {
         if (user) {
             document.getElementById('login-wrapper').style.display = 'none';
             document.getElementById('admin-panel').style.display = 'block';
             loadMenu();
-            loadTransaksi();
+            subscribeTransaksi();
         } else {
             document.getElementById('login-wrapper').style.display = 'flex';
             document.getElementById('admin-panel').style.display = 'none';
+            if (unsubscribeTransaksi) { unsubscribeTransaksi(); unsubscribeTransaksi = null; }
         }
     });
 
@@ -332,7 +372,6 @@
 
     document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-    // ---------- Menu ----------
     async function loadMenu() {
         const list = document.getElementById('menu-list');
         list.innerHTML = '<p style="color:var(--text-dim)">Memuat...</p>';
@@ -465,7 +504,6 @@
         } catch { showToast('Gagal menghapus menu.', 'error'); }
     };
 
-    // ---------- Riwayat Transaksi ----------
     function formatTanggal(ts) {
         if (!ts) return '-';
         const d = ts.toDate ? ts.toDate() : new Date(ts);
@@ -480,15 +518,64 @@
         return map[status] || status;
     }
 
-    async function loadTransaksi() {
+    function isSameDay(d1, d2) {
+        return d1.getFullYear() === d2.getFullYear() &&
+               d1.getMonth() === d2.getMonth() &&
+               d1.getDate() === d2.getDate();
+    }
+
+    function hitungRingkasan(dataList) {
+        const now = new Date();
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+        let todayTotal = 0, todayCount = 0;
+        let weekTotal = 0, weekCount = 0;
+
+        dataList.forEach(t => {
+            if (t.status !== 'settlement') return;
+            if (!t.created_at) return;
+            const tgl = t.created_at.toDate ? t.created_at.toDate() : new Date(t.created_at);
+
+            if (isSameDay(tgl, now)) {
+                todayTotal += Number(t.total || 0);
+                todayCount++;
+            }
+            if (tgl >= sevenDaysAgo) {
+                weekTotal += Number(t.total || 0);
+                weekCount++;
+            }
+        });
+
+        document.getElementById('sum-today-total').textContent = 'Rp' + todayTotal.toLocaleString('id-ID');
+        document.getElementById('sum-today-count').textContent = `${todayCount} transaksi lunas`;
+        document.getElementById('sum-week-total').textContent = 'Rp' + weekTotal.toLocaleString('id-ID');
+        document.getElementById('sum-week-count').textContent = `${weekCount} transaksi lunas`;
+    }
+
+    let firstLoadTrx = true;
+    let knownTrxIds = new Set();
+
+    function subscribeTransaksi() {
+        if (unsubscribeTransaksi) unsubscribeTransaksi();
+
         const list = document.getElementById('trx-list');
         list.innerHTML = '<p style="color:var(--text-dim)">Memuat...</p>';
-        try {
-            const q = query(collection(db, "transaksi"), orderBy("created_at", "desc"), limit(50));
-            const snap = await getDocs(q);
+
+        const q = query(collection(db, "transaksi"), orderBy("created_at", "desc"), limit(100));
+
+        unsubscribeTransaksi = onSnapshot(q, (snap) => {
+            const dataList = [];
+            snap.forEach(docSnap => dataList.push({ id: docSnap.id, ...docSnap.data() }));
+
+            hitungRingkasan(dataList);
+
             list.innerHTML = '';
-            snap.forEach(docSnap => {
-                const t = docSnap.data();
+            if (dataList.length === 0) {
+                list.innerHTML = '<p style="color:var(--text-dim)">Belum ada transaksi.</p>';
+                return;
+            }
+
+            dataList.forEach(t => {
                 const itemsHTML = (t.items || []).map(it => `
                     <div class="trx-item-line">
                         <span>${it.nama}${it.opsiLabel ? ' - ' + it.opsiLabel : (it.note ? ' - ' + it.note : '')} x${it.jumlah}</span>
@@ -496,8 +583,10 @@
                     </div>
                 `).join('');
 
+                const isNew = !firstLoadTrx && !knownTrxIds.has(t.id);
+
                 const el = document.createElement('div');
-                el.className = 'trx-item';
+                el.className = 'trx-item' + (isNew ? ' trx-new' : '');
                 el.innerHTML = `
                     <div class="trx-header">
                         <div class="trx-header-left">
@@ -512,15 +601,16 @@
                     <div class="trx-items-list">${itemsHTML}</div>
                 `;
                 list.appendChild(el);
-            });
-            if (snap.empty) list.innerHTML = '<p style="color:var(--text-dim)">Belum ada transaksi.</p>';
-        } catch (e) {
-            console.error(e);
-            list.innerHTML = '<p style="color:#f87171">Gagal memuat transaksi. Pastikan Firestore Rules sudah mengizinkan admin membaca koleksi transaksi.</p>';
-        }
-    }
 
-    document.getElementById('refresh-trx-btn').addEventListener('click', loadTransaksi);
+                knownTrxIds.add(t.id);
+            });
+
+            firstLoadTrx = false;
+        }, (err) => {
+            console.error(err);
+            list.innerHTML = '<p style="color:#f87171">Gagal memuat transaksi. Pastikan Firestore Rules sudah mengizinkan admin membaca koleksi transaksi.</p>';
+        });
+    }
 </script>
 
 </body>
