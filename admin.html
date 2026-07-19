@@ -554,6 +554,8 @@
 
     let firstLoadTrx = true;
     let knownTrxIds = new Set();
+    let lastDataList = [];
+    let ringkasanInterval = null;
 
     function subscribeTransaksi() {
         if (unsubscribeTransaksi) unsubscribeTransaksi();
@@ -566,8 +568,15 @@
         unsubscribeTransaksi = onSnapshot(q, (snap) => {
             const dataList = [];
             snap.forEach(docSnap => dataList.push({ id: docSnap.id, ...docSnap.data() }));
+            lastDataList = dataList;
 
             hitungRingkasan(dataList);
+
+            // Pastikan ringkasan "Hari Ini" ikut reset tepat waktu di jam 00:00,
+            // walaupun tidak ada transaksi baru yang masuk.
+            if (!ringkasanInterval) {
+                ringkasanInterval = setInterval(() => hitungRingkasan(lastDataList), 60000);
+            }
 
             list.innerHTML = '';
             if (dataList.length === 0) {
